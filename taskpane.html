@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clarivise Scan</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+  <link rel="stylesheet" href="taskpane.css"/>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <img class="logo" src="icons/icon-32.png" alt="Clarivise Scan" style="width:20px;height:20px;border-radius:4px;vertical-align:middle"/>
+      <span class="title">Clarivise Scan</span>
+      <button id="dark-toggle-btn" class="icon-btn" title="Toggle dark mode">🌙</button>
+      <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+    </header>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="panel hidden">
+      <h3>Settings</h3>
+      <label>Supabase Proxy URL
+        <input type="text" id="proxy-url-input" placeholder="https://xxx.supabase.co/functions/v1/analyze-email"/>
+        <small>Your Supabase edge function URL</small>
+      </label>
+      <label>Extension Token
+        <input type="password" id="ext-token-input" placeholder="Your extension token"/>
+        <small>Must match the token set in your Supabase function</small>
+      </label>
+      <label>Organization Domain
+        <input type="text" id="tenant-domain-input" placeholder="yourcompany.com"/>
+        <small>Used to detect external senders</small>
+      </label>
+      <label>Additional Instructions
+        <textarea id="custom-prompt-input" rows="3" placeholder="e.g. We never send password reset emails internally."></textarea>
+        <small>Extra context given to the AI on every analysis</small>
+      </label>
+      <label for="it-security-input">IT Security Email</label>
+        <input type="text" id="it-security-input" placeholder="security@yourcompany.com"/>
+        <button id="save-settings-btn" class="btn-primary">Save Settings</button>
+      <div id="settings-msg" class="msg hidden"></div>
+    </div>
+
+    <!-- Main Panel -->
+    <div id="main-panel">
+      <div id="email-subject" class="email-subject">Loading email...</div>
+      <div id="result-body">
+        <div class="placeholder">Click <strong>Analyze Email</strong> to check this email for threats.</div>
+      </div>
+      <button id="analyze-btn" class="btn-primary btn-analyze">🔍 Analyze Email</button>
+    </div>
+  </div>
+  <script src="taskpane.js"></script>
+</body>
+</html>
