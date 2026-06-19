@@ -1,6 +1,16 @@
 /* Clarivise Scan - Desktop Add-in (taskpane.js) v2.3 */
 let USER_DOMAIN = '';
 
+// Acquire a Microsoft SSO identity token (Entra). Returns '' if unavailable so we fall back to a token.
+async function getSsoToken() {
+  try {
+    if (Office.auth && Office.auth.getAccessToken) {
+      return await Office.auth.getAccessToken({ allowSignInPrompt: true, allowConsentPrompt: true, forMSGraphAccess: false });
+    }
+  } catch (e) { /* SSO unavailable or declined — fall back to token if present */ }
+  return '';
+}
+
 Office.onReady(() => {
   try {
     var _uem = (Office.context.mailbox.userProfile && Office.context.mailbox.userProfile.emailAddress) || '';
@@ -166,7 +176,8 @@ async function analyzeEmail() {
   const proxyUrl = storageGet('proxyUrl') || DEFAULT_PROXY_URL;
   const extToken = storageGet('extToken');
   if (!proxyUrl) { showError('No proxy URL set. Click the gear icon to configure.'); return; }
-  if (!extToken) { showError('No extension token set. Click the gear icon to configure.'); return; }
+  const ssoToken = await getSsoToken();
+  if (!ssoToken && !extToken) { showError('Sign-in required. Ensure you are signed into Outlook, or set a token via the gear icon.'); return; }
 
   setLoading();
   const item = Office.context.mailbox.item;
@@ -223,9 +234,11 @@ async function analyzeEmail() {
   };
 
   try {
+    const _ah = { 'Content-Type': 'application/json' };
+    if (ssoToken) _ah['Authorization'] = 'Bearer ' + ssoToken;
     const response = await fetch(proxyUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: _ah,
       body: JSON.stringify({ token: extToken, emailData, customPrompt, tenantDomain })
     });
     if (response.status === 429) { showError('Please wait 5 seconds before analyzing another email.'); return; }
@@ -349,13 +362,16 @@ async function submitFeedback(feedbackType, result, comment) {
   section.innerHTML = '<div class="feedback-title" style="text-align:center;"><div class="spinner" style="margin:0 auto 6px;"></div>Sending report...</div>';
   const proxyUrl = storageGet('proxyUrl') || DEFAULT_PROXY_URL;
   const extToken = storageGet('extToken');
-  if (!proxyUrl || !extToken) { section.innerHTML = '<div class="feedback-title" style="color:#a80000;">Extension not configured.</div>'; return; }
+  if (!proxyUrl) { section.innerHTML = '<div class="feedback-title" style="color:#a80000;">Extension not configured.</div>'; return; }
   const feedbackUrl = proxyUrl.replace(/\/analyze-email\/?$/, '/report-feedback');
   try {
     const item = Office.context.mailbox.item;
+    const _fbSso = await getSsoToken();
+    const _fbh = { 'Content-Type': 'application/json' };
+    if (_fbSso) _fbh['Authorization'] = 'Bearer ' + _fbSso;
     const response = await fetch(feedbackUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: _fbh,
       body: JSON.stringify({ token: extToken, feedbackType, originalVerdict: result.verdict, originalPhishingScore: result.phishing_score, originalSpamScore: result.spam_score, emailSubject: (item.subject || '').slice(0, 200), emailSender: item.from ? item.from.emailAddress.slice(0, 200) : '', userComment: comment })
     });
     section.innerHTML = response.ok
