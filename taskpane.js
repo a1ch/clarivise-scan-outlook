@@ -58,13 +58,14 @@ function initUI() {
   populateSettings();
 }
 
-const DEFAULT_PROXY_URL = 'https://pikplhvawbhndijpkdbq.supabase.co/functions/v1/analyze-email'
+const DEFAULT_PROXY_URL = 'https://pikplhvawbhndijpkdbq.supabase.co/functions/v1/analyze-email';
+const DEFAULT_IT_SECURITY_EMAIL = 'sstubbs@streamflo.com';
 
 function populateSettings() {
   document.getElementById('proxy-url-input').value    = storageGet('proxyUrl') || DEFAULT_PROXY_URL;
   document.getElementById('tenant-domain-input').value = storageGet('tenantDomain');
   document.getElementById('custom-prompt-input').value = storageGet('customPrompt');
-  var _itEl = document.getElementById('it-security-input'); if (_itEl) _itEl.value = storageGet('itSecurityEmail');
+  var _itEl = document.getElementById('it-security-input'); if (_itEl) _itEl.value = storageGet('itSecurityEmail') || DEFAULT_IT_SECURITY_EMAIL;
 }
 
 function saveSettings() {
@@ -157,7 +158,7 @@ function extractLinks(html) {
 }
 
 async function analyzeEmail() {
-  const proxyUrl = storageGet('proxyUrl');
+  const proxyUrl = storageGet('proxyUrl') || DEFAULT_PROXY_URL;
   const extToken = storageGet('extToken');
   if (!proxyUrl) { showError('No proxy URL set. Click the gear icon to configure.'); return; }
   if (!extToken) { showError('No extension token set. Click the gear icon to configure.'); return; }
@@ -308,7 +309,7 @@ function showResult(result, { subject, links }) {
   document.getElementById('fb-fp').addEventListener('click', () => showFeedbackForm('false_positive', result));
   document.getElementById('fb-mt').addEventListener('click', () => showFeedbackForm('missed_threat', result));
   // Send to Security for Review
-  var _itSec = (result.itSecurityEmail || storageGet('itSecurityEmail') || '').trim();
+  var _itSec = (result.itSecurityEmail || storageGet('itSecurityEmail') || DEFAULT_IT_SECURITY_EMAIL || '').trim();
   var _rb = document.getElementById('result-body');
   if (_rb) {
     var _wrap = document.createElement('div');
@@ -341,7 +342,7 @@ function showFeedbackForm(feedbackType, result) {
 async function submitFeedback(feedbackType, result, comment) {
   const section = document.getElementById('feedback-section');
   section.innerHTML = '<div class="feedback-title" style="text-align:center;"><div class="spinner" style="margin:0 auto 6px;"></div>Sending report...</div>';
-  const proxyUrl = storageGet('proxyUrl');
+  const proxyUrl = storageGet('proxyUrl') || DEFAULT_PROXY_URL;
   const extToken = storageGet('extToken');
   if (!proxyUrl || !extToken) { section.innerHTML = '<div class="feedback-title" style="color:#a80000;">Extension not configured.</div>'; return; }
   const feedbackUrl = proxyUrl.replace(/\/analyze-email\/?$/, '/report-feedback');
