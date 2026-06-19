@@ -6,7 +6,7 @@
            xsi:type="MailApp">
 
   <Id>3b7e2f1a-4c8d-4e9f-b2a1-6d5c3e7f8b9a</Id>
-  <Version>2.2.0.0</Version>
+  <Version>2.3.0.0</Version>
   <ProviderName>Clarivise</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Clarivise Scan"/>
@@ -98,6 +98,18 @@
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Analyze this email for spam and phishing threats with Clarivise Scan"/>
       </bt:LongStrings>
     </Resources>
+    <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
+      <WebApplicationInfo>
+        <Id>7b86ec1f-da7c-45a9-b7db-2ee621db146b</Id>
+        <Resource>api://a1ch.github.io/7b86ec1f-da7c-45a9-b7db-2ee621db146b</Resource>
+        <Scopes>
+          <Scope>openid</Scope>
+          <Scope>profile</Scope>
+          <Scope>email</Scope>
+          <Scope>User.Read</Scope>
+        </Scopes>
+      </WebApplicationInfo>
+    </VersionOverrides>
   </VersionOverrides>
 
 </OfficeApp>
