@@ -1,6 +1,11 @@
-/* Clarivise Scan - Desktop Add-in (taskpane.js) v2.1 */
+/* Clarivise Scan - Desktop Add-in (taskpane.js) v2.3 */
+let USER_DOMAIN = '';
 
 Office.onReady(() => {
+  try {
+    var _uem = (Office.context.mailbox.userProfile && Office.context.mailbox.userProfile.emailAddress) || '';
+    USER_DOMAIN = (_uem.split('@')[1] || '').toLowerCase();
+  } catch(e) {}
   initUI();
   loadEmail();
   // Re-load email subject when user switches to a different email (pinned taskpane)
@@ -63,7 +68,7 @@ const DEFAULT_IT_SECURITY_EMAIL = 'sstubbs@streamflo.com';
 
 function populateSettings() {
   document.getElementById('proxy-url-input').value    = storageGet('proxyUrl') || DEFAULT_PROXY_URL;
-  document.getElementById('tenant-domain-input').value = storageGet('tenantDomain');
+  document.getElementById('tenant-domain-input').value = storageGet('tenantDomain') || USER_DOMAIN;
   document.getElementById('custom-prompt-input').value = storageGet('customPrompt');
   var _itEl = document.getElementById('it-security-input'); if (_itEl) _itEl.value = storageGet('itSecurityEmail') || DEFAULT_IT_SECURITY_EMAIL;
 }
@@ -181,7 +186,7 @@ async function analyzeEmail() {
   const subject     = item.subject || '(No subject)';
   const links       = extractLinks(bodyHtml);
   const attachNames = (item.attachments || []).map(a => (a.name || '').toLowerCase());
-  const tenantDomain = storageGet('tenantDomain') || '';
+  const tenantDomain = storageGet('tenantDomain') || USER_DOMAIN || '';
   const customPrompt = storageGet('customPrompt') || '';
 
   let isOutlookExternal = false;
