@@ -18,14 +18,14 @@ Office.onReady(() => {
   } catch(e) {}
   initUI();
   loadEmail();
+  // Auto-scan as soon as the pane opens -- no need to click Analyze
+  analyzeEmail();
   // Re-load email subject when user switches to a different email (pinned taskpane)
   try {
     Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, () => {
       loadEmail();
-      // Reset UI to ready state for new email
-      const btn = document.getElementById('analyze-btn');
-      if (btn) { btn.disabled = false; btn.textContent = '🔍 Analyze Email'; }
-      document.getElementById('result-body').innerHTML = '<p>Click <strong>Analyze Email</strong> to check this email for threats.</p>';
+      // Auto-scan the newly selected email (pinned taskpane) -- no need to click Analyze
+      analyzeEmail();
     });
   } catch(e) {}
 });
