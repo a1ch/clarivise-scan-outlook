@@ -342,6 +342,27 @@ function showResult(result, { subject, links }) {
       _rbtn.addEventListener('click', function () {
         var subj = '[Security Report] ' + (result.verdict || '') + ': ' + (subject || '(no subject)').slice(0, 80);
         var lines = ['I am forwarding this email for your review.', '', 'Verdict: ' + (result.verdict || ''), 'Phishing score: ' + (result.phishing_score || 0) + '/100', 'Summary: ' + (result.summary || '')];
+        var htmlBody = lines.map(escapeHtml).join('<br>');
+        var _useForm = false;
+        try { _useForm = !!(Office.context.requirements && Office.context.requirements.isSetSupported('Mailbox', '1.6') && Office.context.mailbox.displayNewMessageForm); } catch (e) {}
+        var _origItem = Office.context.mailbox.item;
+        var _atts = (_origItem && _origItem.itemId)
+          ? [{ type: 'item', itemId: _origItem.itemId, name: (subject || 'Suspicious email').slice(0, 60) + '.msg' }]
+          : [];
+        if (_useForm) {
+          try {
+            Office.context.mailbox.displayNewMessageForm({
+              toRecipients: [_itSec],
+              subject: subj,
+              htmlBody: htmlBody,
+              attachments: _atts
+            });
+            _rbtn.textContent = '✅ Draft opened — review & Send';
+            _rbtn.disabled = true;
+            setTimeout(function () { _rbtn.textContent = '📨 Send to Security for Review'; _rbtn.disabled = false; }, 4000);
+            return;
+          } catch (e) { /* fall through to mailto (no attachment) */ }
+        }
         window.open('mailto:' + encodeURIComponent(_itSec) + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(lines.join('\n')), '_blank');
       });
     }
