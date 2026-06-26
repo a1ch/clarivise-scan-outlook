@@ -241,7 +241,12 @@ async function analyzeEmail() {
       headers: _ah,
       body: JSON.stringify({ token: extToken, emailData, customPrompt, tenantDomain })
     });
-    if (response.status === 429) { showError('Please wait 5 seconds before analyzing another email.'); return; }
+    if (response.status === 429) {
+      let _msg = 'Please wait 5 seconds before analyzing another email.';
+      try { const _j = await response.json(); if (_j && _j.error) _msg = _j.error; } catch (e) {}
+      showError(_msg);
+      return;
+    }
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       showError('Proxy error ' + response.status + ': ' + (err.error || response.statusText));
