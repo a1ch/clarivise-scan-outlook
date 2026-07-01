@@ -158,3 +158,20 @@ body.dark .verdict-phishing { background: #7a0000; color: white; }
 .feedback-comment { width: 100%; border: 1px solid var(--input-border); border-radius: 4px; padding: 6px 8px; font-size: 12px; font-family: inherit; resize: vertical; margin-bottom: 8px; outline: none; background: var(--input-bg); color: var(--text); }
 .feedback-comment:focus { border-color: #0078d4; }
 .feedback-actions { display: flex; gap: 8px; }
+
+
+/* --- Clarivise: sender familiarity + self-service checker --- */
+.familiarity{font-size:12px;padding:6px 10px;border-radius:6px;margin:6px 0 0;border-left:3px solid #12a19a;background:rgba(18,161,154,.10);}
+.familiarity.fam-warn{border-left-color:#d97706;background:rgba(217,119,6,.12);}
+.familiarity.fam-bad{border-left-color:#dc2626;background:rgba(220,38,38,.12);}
+.checker{margin-top:14px;padding-top:12px;border-top:1px solid rgba(128,128,128,.25);}
+.checker-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#12a19a;margin-bottom:6px;}
+.checker-row{display:flex;gap:6px;}
+.checker-row input{flex:1;font-size:13px;padding:7px 9px;border:1px solid rgba(128,128,128,.4);border-radius:6px;background:transparent;color:inherit;}
+.btn-secondary{font-size:13px;font-weight:600;color:#fff;background:#12a19a;border:none;border-radius:6px;padding:7px 14px;cursor:pointer;}
+.btn-secondary:disabled{opacity:.6;}
+.checker-verdict{margin-top:8px;font-size:12px;border-radius:6px;padding:8px 10px;background:rgba(128,128,128,.10);}
+.checker-verdict ul{margin:6px 0 0;padding-left:16px;}
+.checker-verdict.risk-low{background:rgba(18,161,154,.12);border-left:3px solid #12a19a;}
+.checker-verdict.risk-medium{background:rgba(217,119,6,.14);border-left:3px solid #d97706;}
+.checker-verdict.risk-high{background:rgba(220,38,38,.14);border-left:3px solid #dc2626;}

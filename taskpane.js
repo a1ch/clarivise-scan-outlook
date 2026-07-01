@@ -17,15 +17,18 @@ Office.onReady(() => {
     USER_DOMAIN = (_uem.split('@')[1] || '').toLowerCase();
   } catch(e) {}
   initUI();
+  wireChecker();
   loadEmail();
   // Auto-scan as soon as the pane opens -- no need to click Analyze
   analyzeEmail();
+  loadFamiliarity();
   // Re-load email subject when user switches to a different email (pinned taskpane)
   try {
     Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, () => {
       loadEmail();
       // Auto-scan the newly selected email (pinned taskpane) -- no need to click Analyze
       analyzeEmail();
+      loadFamiliarity();
     });
   } catch(e) {}
 });
@@ -413,4 +416,73 @@ function resetFeedbackSection() {
   section.innerHTML = '<div class="feedback-title">Was this analysis accurate?</div><div class="feedback-buttons"><button class="feedback-btn fb-false-positive" id="fb-fp">👎 False Positive</button><button class="feedback-btn fb-missed-threat" id="fb-mt">🚨 Missed Threat</button></div>';
   document.getElementById('fb-fp').addEventListener('click', () => showFeedbackForm('false_positive', lastResult));
   document.getElementById('fb-mt').addEventListener('click', () => showFeedbackForm('missed_threat', lastResult));
+}
+
+
+// --- Clarivise: derived endpoint URLs ---
+function _clariviseBase(){ var p = storageGet('proxyUrl') || DEFAULT_PROXY_URL; return p.replace('/analyze-email',''); }
+function _familiarityUrl(){ return _clariviseBase() + '/sender-familiarity'; }
+function _checkerUrl(){ return _clariviseBase() + '/check-indicator'; }
+
+// --- Sender familiarity ("have we heard from this sender before?") ---
+async function loadFamiliarity(){
+  var el = document.getElementById('familiarity'); if(!el) return;
+  var item = Office.context.mailbox.item;
+  var email = (item && item.from && item.from.emailAddress) ? item.from.emailAddress : '';
+  if(!email){ el.classList.add('hidden'); return; }
+  try{
+    var r = await fetch(_familiarityUrl() + '?email=' + encodeURIComponent(email));
+    if(!r.ok){ el.classList.add('hidden'); return; }
+    var d = await r.json();
+    var c = (d.sender && d.sender.count) || 0;
+    var v = (d.sender && d.sender.verdicts) || {};
+    var bad = (v.PHISHING||0) + (v.SPAM||0) + (v.SUSPICIOUS||0);
+    var safe = v.SAFE || 0;
+    el.className = 'familiarity';
+    var html;
+    if(c <= 1){
+      var dc = d.domainCount || 0;
+      html = '🆕 <strong>First time</strong> hearing from this sender' + (dc>1 ? ' (' + dc + ' prior emails from ' + escapeHtml(d.domain||'') + ')' : '') + '.';
+      el.classList.add('fam-warn');
+    } else if(bad === 0){
+      html = '🧭 Known sender — <strong>' + c + '</strong> prior emails, all clean.';
+    } else if(bad >= safe){
+      html = '⚠️ Seen <strong>' + c + '</strong> times, but ' + bad + ' were flagged (spam/phishing). Stay cautious.';
+      el.classList.add('fam-bad');
+    } else {
+      html = '🧭 Seen <strong>' + c + '</strong> times — ' + safe + ' clean, ' + bad + ' flagged.';
+      el.classList.add('fam-warn');
+    }
+    el.innerHTML = html;
+    el.classList.remove('hidden');
+  } catch(e){ el.classList.add('hidden'); }
+}
+
+// --- Self-service link/sender checker ---
+function wireChecker(){
+  var btn = document.getElementById('checker-btn');
+  var inp = document.getElementById('checker-input');
+  if(btn) btn.addEventListener('click', checkIndicator);
+  if(inp) inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') checkIndicator(); });
+}
+async function checkIndicator(){
+  var inp = document.getElementById('checker-input');
+  var out = document.getElementById('checker-result');
+  var btn = document.getElementById('checker-btn');
+  if(!inp || !out) return;
+  var val = (inp.value || '').trim();
+  if(!val){ out.innerHTML = ''; return; }
+  out.innerHTML = '<div class="checker-verdict">Checking...</div>';
+  if(btn) btn.disabled = true;
+  try{
+    var r = await fetch(_checkerUrl() + '?value=' + encodeURIComponent(val));
+    var d = await r.json();
+    if(d.error){ out.innerHTML = '<div class="checker-verdict">' + escapeHtml(d.error) + '</div>'; }
+    else {
+      var cls = 'risk-' + (d.risk || 'low');
+      var reasons = (d.reasons || []).map(function(x){ return '<li>' + escapeHtml(x) + '</li>'; }).join('');
+      out.innerHTML = '<div class="checker-verdict ' + cls + '"><strong>' + escapeHtml((d.risk||'').toUpperCase()) + ' risk</strong> (' + escapeHtml(d.kind||'') + ')<ul>' + reasons + '</ul></div>';
+    }
+  } catch(e){ out.innerHTML = '<div class="checker-verdict">Check failed.</div>'; }
+  if(btn) btn.disabled = false;
 }

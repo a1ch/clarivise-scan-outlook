@@ -44,10 +44,19 @@
     <!-- Main Panel -->
     <div id="main-panel">
       <div id="email-subject" class="email-subject">Loading email...</div>
+      <div id="familiarity" class="familiarity hidden"></div>
       <div id="result-body">
         <div class="placeholder">Click <strong>Analyze Email</strong> to check this email for threats.</div>
       </div>
       <button id="analyze-btn" class="btn-primary btn-analyze">🔍 Analyze Email</button>
+      <div class="checker">
+        <div class="checker-title">🔎 Check a link or sender</div>
+        <div class="checker-row">
+          <input id="checker-input" type="text" placeholder="Paste a URL or email address" autocomplete="off"/>
+          <button id="checker-btn" class="btn-secondary">Check</button>
+        </div>
+        <div id="checker-result"></div>
+      </div>
     </div>
   </div>
   <script src="taskpane.js"></script>
